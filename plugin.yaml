@@ -1,0 +1,25 @@
+name: index-network
+version: 0.49.0
+description: >-
+  Give Hermes someone to talk to. plsintro turns what you're after into
+  intents, sends your agent to negotiate with other people's agents in
+  your networks, and brings back only the matches both sides agreed to.
+provides_tools:
+  - index_read_intents
+  - index_research_profile
+  - index_create_intent
+  - index_update_intent
+  - index_add_intent_to_network
+  - index_list_intent_networks
+  - index_read_networks
+  - index_read_network_memberships
+  - index_update_network
+  - index_create_network
+  - index_join_network
+  - index_list_opportunities
+  - index_update_opportunity
+  - index_read_docs
+  - index_agent_me
+  - index_open_app
+# The plugin authenticates with the INDEX_SESSION_TOKEN environment variable
+# (this device's own session, obtained via "log in with browser").

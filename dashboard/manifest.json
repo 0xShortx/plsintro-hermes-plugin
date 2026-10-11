@@ -1,0 +1,15 @@
+{
+  "name": "index-network",
+  "label": "Discover",
+  "description": "Intent-centric plsintro overview: each intent carries its own opportunity radar, with a separate Networks view.",
+  "icon": "Sparkles",
+  "version": "0.39.0",
+  "tab": {
+    "path": "/index-network",
+    "position": "after:skills"
+  },
+  "slots": ["header-right"],
+  "entry": "dist/index.js",
+  "css": "dist/style.css",
+  "api": "plugin_api.py"
+}

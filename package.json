@@ -1,0 +1,40 @@
+{
+  "name": "@plsintro/hermes-plugin",
+  "version": "0.49.0",
+  "description": "Hermes-native plsintro plugin with CLI tools and REST APIs",
+  "license": "MIT",
+  "type": "module",
+  "homepage": "https://plsintro.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xShortx/plsintro-hermes-plugin.git"
+  },
+  "files": [
+    "plugin.yaml",
+    "__init__.py",
+    "schemas.py",
+    "tools.py",
+    "transport.py",
+    "env_transport.py",
+    "speaker.py",
+    "bridge.py",
+    "sidecar.py",
+    "events.py",
+    "morning.py",
+    "mcp.py",
+    "runtime/dist/",
+    "dashboard/",
+    "desktop/plugin.js",
+    "tests/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "!**/__pycache__/**",
+    "!**/*.py[cod]"
+  ],
+  "scripts": {
+    "build:desktop": "node desktop/build.mjs",
+    "build:runtime": "bun build ./runtime/src/main.ts --outfile runtime/dist/negotiator.js --target bun --format esm",
+    "typecheck:runtime": "tsc -p runtime/tsconfig.json"
+  }
+}

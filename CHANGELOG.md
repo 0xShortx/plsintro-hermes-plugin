@@ -1,0 +1,506 @@
+# Changelog
+
+## 0.49.0 (plsintro)
+
+### Changed
+- The plugin connects to plsintro: API `https://api.plsintro.com`, links on `https://plsintro.com`. `INDEX_APP_BASE_URL=plsintro.com` derives `api.plsintro.com`.
+- The MCP server registers as `mcp_servers.plsintro`.
+- Login page, Discover login card and desktop entry use the plsintro name and mark. The hosted negotiator shows as "plsintro agent".
+- The environment menu offers `main` and `local`. The Index dev host is gone.
+- Install: `hermes plugins install 0xShortx/plsintro-hermes-plugin`.
+
+## Unreleased
+
+### Changed
+- The negotiator runs in any Hermes server, not only the gateway: `hermes gateway run`, Desktop's `hermes serve` backend, or `hermes dashboard`. Before, it waited 60 seconds for a gateway runner, so Desktop alone never started it. A lock file in the Hermes home keeps it to one process. The plugin no longer reads the gateway's private runner reference to decide this.
+- Negotiator turns are written to the Hermes session list through the shared session database, so they show in the sidebar under any Hermes server. Before, they were written only through the gateway's private session store, so under Desktop alone they never appeared.
+- Negotiator completions use the gateway's main model client. They no longer go through the auxiliary client.
+- The desktop bundle ships at `desktop/plugin.js`. Hermes installs that half and keeps it off until enabled. The plugin no longer copies itself into `desktop-plugins`.
+- Discover no longer wraps `history.pushState` or inserts buttons into the host header. The web dashboard uses the `header-right` slot. Desktop keeps its own header.
+- The morning brief is off until turned on. The 08:00 cron job runs only while that switch is on and this install is the selected, unpaused negotiator. It wakes once per active networked intent. Deselect, pause, turning the switch off, and uninstall remove the job and its launcher.
+- A rejected session stays on the Index host already configured. The plugin no longer sends the session token to dev or localhost to hunt for another origin.
+- `index-negotiator.json` is written with mode 0600.
+
+### Added
+- `index_create_intent` and `index_list_opportunities` descriptions say when to
+  reach for them: meeting, finding, hiring, funding, collaborating with, or
+  being introduced to people, and asking who to meet.
+- Tool payloads get `appUrl` on signals (`/i/<intentId>`) and people
+  (`/u/<userId>`) as well as opportunities. Objects carrying both `userId` and
+  `intentId` are left alone.
+- Clicking an `https://index.network` (or `dev.index.network`) `/u/<id>`,
+  `/i/<id>`, or `/o/<id>` link inside Hermes Desktop opens it in Discover
+  instead of the browser. Modified clicks still open the browser.
+
+### Fixed
+- Brief and negotiate runs require a tool call on their first step. The bridge forwards `tool_choice` so a prose reply cannot drop the brief or the turn.
+- Opportunity status frames no longer wake the bundled negotiator.
+- A failed profile load no longer crashes Discover. The panel rendered
+  `form.avatar` while `form` was still null, and the page error boundary
+  replaced the signal.
+- A `hermes://open/index-network?intent=` link opens that signal when Discover
+  loads or the hash changes. The plugin does not wrap `history.pushState`.
+  Navigations this plugin makes on Desktop still dispatch a location event.
+- `plugin.yaml` reports the package version (was stuck at 0.43.0).
+- The desktop header now shows the negotiator the gateway is running. The
+  dashboard runs in a separate process and used to report its own idle copy as
+  Off, and its Start would have launched a second negotiator. Start and Stop
+  now set a pause flag in `<hermes home>/index-negotiator.json`, which the
+  gateway applies within 5 seconds. The header control is renamed from
+  Sidecar to Negotiator, and its routes are now `/negotiator`,
+  `/negotiator/start`, and `/negotiator/stop`.
+- The sidecar mints an Index API key from the device session when
+  `INDEX_API_KEY` is missing, so choosing Hermes as negotiator starts the Bun
+  process. The key stays on the gateway env.
+- Negotiator steps use the gateway profile's model and credentials. The
+  separate `negotiator` Hermes profile is gone. It was cloned once, so its key
+  went stale and every step failed with "No LLM provider configured".
+  Negotiation sessions are now recorded in the default profile under a
+  **Negotiations** project (folder `<hermes home>/negotiations`), created on
+  the first recorded step. The Bun negotiator does not receive
+  `INDEX_SESSION_TOKEN`; it authenticates with the API key.
+- The bundled negotiator keeps a stall until its own question is answered, it
+  is resolved explicitly, or the negotiation is declined, stopped, or moves on.
+  An unrelated message no longer releases every stall on the signal. On
+  reconnect it recovers outstanding stall questions, answers and owed turns,
+  and it retries a failed wake up to three times.
+
+### Changed
+- The negotiator name uses Public Sans, the same face as the rest of the plugin.
+- The desktop sidebar unread count sits in parentheses: `Discover (3)`.
+- The plugin no longer registers an Index gateway platform. The gateway
+  process watches the selected negotiator and records sessions in the
+  Negotiations project. Pause, or choosing another negotiator, still stops it.
+- Negotiator selection follows the Index event stream (`agent.configuration`
+  on `GET /events`). Start and Stop follow the pause file as it is written.
+  The 5-second selection poll is gone.
+- Discover no longer has an auto-refresh switch. The page refreshes on its own.
+- The desktop header's negotiator control is a switcher. It shows the
+  selected agent and its status, and choosing another agent in the dialog
+  makes that agent the negotiator.
+- On desktop, home puts the pitch on the left of that header and the
+  negotiator, messages, and profile on the right. A signal puts Back on the
+  left and the same controls on the right.
+- Hermes stays pending, in orange, while it is the selected negotiator and
+  the process is not running yet. It turns running once the process is up.
+  A failed selection read no longer stops that process, which left the header
+  pending after the event stream dropped.
+- The bundled negotiator submits a turn as `{ action, message }`; it no
+  longer sends the expected turn count.
+- The bundled negotiator is now published as `@indexnetwork/agent` (formerly
+  `@indexnetwork/agentv2`); behaviour is unchanged.
+
+### Added
+- Register the Index MCP server (`mcp_servers.index`) while `INDEX_API_KEY` is set, authenticated with `x-api-key`. Clearing the key removes the entry.
+
+### Changed
+- Browser login and sign-out leave `INDEX_API_KEY` in place. That key is the Index MCP credential.
+
+## 0.46.1
+
+### Fixed
+- Opening a Discover overlay no longer remounts the page behind it. Query-only
+  hash changes (`?profile=`, `?chat=`, `?user=`) stay on the existing pane
+  instead of calling `openWorkspace` again.
+
+## 0.46.0
+
+### Changed
+- **The H2A inbox is live, and behaves like a chat.** The signal's agent
+  transcript now subscribes to the same realtime stream the messages panel
+  reads and re-reads on any frame naming that signal, with the 5s poll kept as
+  the backstop for frames missed while disconnected — and as the only path in
+  the desktop host, whose REST bridge cannot stream. Question options, the
+  write-your-own box, and the send button are never disabled: answers send
+  whether or not an external negotiator is selected, matching the API. The
+  composer clears as soon as you send instead of waiting for the write, and a
+  failed send or read says nothing and keeps the last transcript on screen
+  rather than showing an error or "Retrying…". Transcript bubbles render
+  markdown — paragraphs, lists, headings, code, bold, italic, and http(s)
+  links — for the agent's words and your own.
+
+## 0.45.1
+
+### Fixed
+- Intent radar now asks the API for the same statuses the Mac app does
+  (`pending,negotiating,accepted,expired`). The previous query included
+  `stalled`, which the API rejects, so Discover painted an empty radar.
+
+### Changed
+- Discover's signal page matches the Mac split: signal | radar, all matches
+  visible by default, pause/archive on the signal header. The H2A transcript
+  and composer stay on the signal pane as an inbox — writing is not gated on
+  a selected negotiator.
+
+## 0.45.0
+
+### Added
+- **H2A chat on Discover's signal detail.** The signal panel now shows the
+  owner's whole conversation with their personal agent for that signal: the
+  transcript, every question still waiting (with its options, a write-your-own
+  answer, and the matches it is about), and a composer for messaging the agent
+  directly. Answers picked across several questions are sent as one write, so
+  the agent decides from all of them at once. Previously the panel only offered
+  the single pending question, and read a field the API no longer returns, so
+  nothing appeared at all. Questions and answers still live on the same agent DM
+  Index web uses. A read that fails says so and keeps retrying, rather than
+  sitting on a loading line forever — which is what an out-of-date plugin
+  backend looks like until Hermes restarts and mounts the new routes.
+
+### Changed
+- **BREAKING (dashboard REST):** `GET /agent/question` and `POST /agent/answer`
+  are replaced by `GET /agent/conversation`, `POST /agent/message`, and
+  `POST /agent/answers`.
+
+## 0.44.0
+
+### Changed
+- Follow the API's negotiation routes onto the opportunity: the runtime reads
+  `GET /opportunities/:id/negotiation` and submits to
+  `POST /opportunities/:id/negotiation/turns`. `GET /negotiations`, which the
+  dashboard and the wake path poll, is unchanged. Needs an API at 0.125.0 or
+  later.
+
+## 0.43.0
+
+### Added
+- **Desktop sidecar Start/Stop.** The Discover header (next to auto-refresh)
+  starts or stops this machine's negotiator. Start still wakes every open
+  signal waiting on the owner.
+
+### Changed
+- The negotiator Bun process is a child of the Hermes gateway: it starts with
+  the `index` platform when this machine is selected, restarts if that child
+  exits, and stops when the gateway exits or the selection moves.
+- **Think and speak turns persist in Hermes.** Each turn writes its prompt
+  and tool calls into `state.db` under the session title, so Sessions can
+  show the match transcript.
+- **Hermes speaks under the hosted system prompt.** Each think/speak turn
+  receives the same standing instructions `Agent.run` uses, so match sessions
+  propose instead of asking permission on every match. A successful
+  `request_principal_input` no longer looks like a tool error.
+- **`INDEX_APP_BASE_URL` may be `http://localhost` (or `127.0.0.1`).** Browser
+  login opens that origin's `/cli-auth` instead of falling back to production.
+- **Questions and answers live on Index web.** Think sessions remain the
+  inbox-review working transcript. The sidecar no longer copies questions
+  onto that chat or treats keystrokes as `/answer`. New H2A is posted to
+  the owner's agent DM (`POST /conversations/agent/h2a?executorId=`), and
+  owner replies arrive as `principal.input` events.
+
+## 0.42.0
+
+### Changed
+- **Hermes is the speaker, not the bound-conversation negotiator.** The
+  previous path — `index_configure_personal_agent`, `index_focus_intent`, a
+  sqlite bind row, reply-address routing, `auxiliary_client.call_llm` /
+  `/complete`, and one announced Hermes session per signal — is gone. The
+  sidecar still runs `@indexnetwork/agent`. Hermes now speaks through
+  Index-platform sessions: one think session per signal (`{intentId}:think`)
+  and one speaker session per match (`{opportunityId}`). Owner text is
+  accepted only on the think session. Hosted Index still uses `Agent.run`.
+
+### Removed
+- Tools `index_configure_personal_agent` and `index_focus_intent`.
+- Hook `pre_llm_call`, `HermesModel`, `native_agent.py`, and
+  `principal.sqlite3` bind/focus state.
+
+## 0.41.3
+
+### Added
+- Each submitted turn is written into a Hermes session on the Index platform,
+  one chat per signal, so the session list shows Hermes's Index copy without a
+  bound owner conversation.
+
+### Fixed
+- Background wakes no longer treat every signal as foreign. `GET /intents/:id`
+  is already owner-scoped and does not return `userId`, so the sidecar's
+  ownership check always failed and no turn ever started.
+- Opening Discover while a session tile covers the workspace. The tab is
+  re-opened on every Discover click so the host fronts it instead of leaving
+  the dashboard behind.
+
+## 0.41.2
+
+### Fixed
+- Wake the affected negotiation seat on `negotiation.changed`, including when a counterparty resumes its intent.
+
+## 0.41.1
+
+### Fixed
+- Opening Discover while another Hermes view is already showing. The host
+  renders the page inside the workspace pane, so a focused session tile (or
+  `hermes://open/index-network` while that tile is up) left the dashboard
+  behind it until restart. Discover now fronts a workspace tab when the pane
+  is covered.
+
+## 0.41.0
+
+### Changed
+- **Hermes now runs the Index negotiator instead of reimplementing it.** The
+  plugin previously carried its own copy of the negotiation logic — an inbox
+  state machine in SQLite, work IDs and turn fencing in `negotiation.py`, and a
+  generated `SKILL.md` that reproduced the canonical prompts — driven by the
+  Hermes agent loop through six native tools. That copy has been deleted. The
+  negotiator is now `@indexnetwork/agent`, the same package the hosted Index
+  runtime executes, running as a supervised Bun process
+  (`runtime/dist/negotiator.js`). Prompts, tools, policies, the state machine,
+  the question flow, and the persistence model are whatever that package does;
+  none of them are described here any more.
+- Hermes's role is execution, not negotiation. It supplies the model — one
+  tool-capable completion per call through the host's `auxiliary_client.call_llm`,
+  so provider choice, credentials, and fallback stay with Hermes — plus the
+  owner's conversation and this machine. **Bun is now required** to run the
+  personal agent.
+- Owner input is handed to the negotiator and reported consumed, so Hermes no
+  longer reasons about a message that belongs to a focused signal, and can no
+  longer answer on the owner's behalf. A refused or undeliverable message falls
+  through to ordinary Hermes conversation instead of being swallowed.
+- Negotiation state moved out of `principal.sqlite3`, which now holds only which
+  account and agent this machine negotiates for. The inbox, H2A transcript,
+  questions, and match progress are the agent package's own checkpoints, one JSON
+  file per signal under `$HERMES_HOME/index-network/negotiator/`. **Existing
+  in-flight negotiation state does not migrate**; matches are re-read from Index
+  and reconsidered from scratch.
+- Questions from this negotiator are delivered only to the bound Hermes
+  conversation. An entry Hermes could not deliver stays undelivered and is
+  offered again, rather than being recorded as sent.
+
+### Removed
+- Native tools `index_list_negotiations`, `index_read_negotiation`,
+  `index_submit_turn`, `index_request_principal_input`,
+  `index_read_principal_inbox`, and `index_review_principal_inbox`. The
+  negotiator no longer reaches Index through Hermes tools.
+- Hooks `pre_tool_call`, `transform_llm_output`, and `post_llm_call`, and the
+  `personal-agent` plugin skill. The event platform no longer opens a Hermes chat
+  per signal, so there is no session to scope, filter, or render output for.
+
+## 0.40.0
+
+### Changed
+- **Choosing Hermes as your negotiator now starts it.** Previously that choice
+  only claimed the Index slot, which stopped the hosted negotiator without
+  putting anything in its place: turns sat unanswered until the personal agent
+  was separately enabled from a private gateway conversation. Selecting Hermes
+  in **Settings → Advanced** now also writes this machine's binding, so the
+  event reader follows `/events` and takes turns within a few seconds. Choosing
+  the hosted Index negotiator, or another registered agent, stops it.
+- Background turns no longer need an owner conversation. A machine selected
+  from the dashboard has none, so questions and updates stay in the private
+  inbox until `index_configure_personal_agent` supplies one from a private
+  gateway conversation, which now overlays the existing binding rather than
+  refusing it. Owner replies still come only from that conversation.
+
+## 0.39.0
+
+### Added
+- An **Advanced** menu in the dashboard's Settings panel, holding two owner
+  controls that were previously only reachable from the web app: **Settings**,
+  which chooses the agent that negotiates for you, and **Negotiations**, which
+  lists the exchanges still open. Both are optional and sit outside sign-in.
+- Dashboard REST bridge for them: `GET`/`POST /agents`,
+  `PATCH /agents/:id { handleNegotiations }`, and `GET /negotiations`. Picking
+  Hermes registers it first when it has no agent record yet; picking the hosted
+  Index negotiator releases the binding, which is how the API reads that choice.
+
+### Fixed
+- One environment for sign-in and for requests. The API origin is now resolved in
+  a single place, and derived from `INDEX_APP_BASE_URL` when `INDEX_API_URL` is
+  absent (`dev.index.network` -> `protocol.dev.index.network`). An env carrying
+  only the web origin previously approved a device code on dev and redeemed it on
+  production, which answers 404, so browser sign-in failed after the handshake
+  succeeded. Hosts outside `index.network` are left alone.
+- Device sign-in reports why it failed — endpoint, status, and the server's own
+  description — instead of collapsing every cause into "please try again".
+
+## 0.38.0
+
+### Added
+- Native personal-agent negotiation using Hermes's configured model, tools, and
+  skills. Work is woken by the owner's Index event stream: the plugin registers an
+  `index` gateway platform that follows `GET /events` and opens one bounded run,
+  in a chat of its own, for the signal a frame names. Frames arriving together for
+  one signal collapse into a single run, and every reconnection reconciles against
+  `GET /negotiations`, so a frame missed while the gateway was down costs nothing.
+- A durable private inbox with stable questions, scoped native owner replies,
+  context revisions, and one submission attempt per match in each native run.
+- Shared instruction assets generated from `packages/agent`, and an atomic executor
+  check on turn submissions (requires Index API 0.117.0).
+
+### Operating requirements
+- Enable the personal agent from a private Hermes gateway conversation and keep
+  the gateway running. CLI/Desktop-only sessions retain the general Index tools.
+- Requires a Hermes with `register_platform` (checked at `63279301bc`).
+- Human connection approval remains separate from A2A agreement.
+
+## 0.37.0
+
+- Call the Index REST API directly over HTTPS instead of shelling out to
+  `index tool call`. Every plugin function maps to a resource: signals through
+  `/intents` (plus `/intents/:id/networks` for community links), communities
+  through `/networks` with a `/network-requests` fallback when creation is
+  staff-gated, opportunities through `/opportunities`, profile research through
+  `/enrichment`, and guidance through `/docs`. `index_create_network_membership`
+  is `index_join_network`; `index_search_intents` and `index_scrape_url` are
+  gone. The dashboard relays the user event stream from `/events`.
+
+## 0.36.0
+
+- Invoke Index tools through CLI 0.24.0 with explicit API origin, JSON output, and environment session credentials. Preserve dashboard, upload, and streaming HTTP operations.
+- `INDEX_API_URL` now takes the bare origin, without `/api`, matching the CLI. Update custom overrides when upgrading.
+- Require the matching CLI on the Hermes process PATH. Removed Index MCP configuration no longer applies.
+
+All notable changes to `@indexnetwork/hermes-plugin` are documented here.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this package adheres to [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+### Fixed
+- Hermes plugin install scan: reword docs and env-file paths so community
+  install no longer trips a HIGH finding.
+- Install scan no longer treats the bundled fonts as exfiltration, the loading
+  loops as oversized files, or the runtime typecheck paths as traversal. The
+  negotiator still starts through a subprocess, which the scan reports at
+  medium and does not block.
+- Browser login redeem no longer 404s when `INDEX_API_URL` still includes a
+  trailing `/api` (the pre-0.36 form). The origin is normalized before
+  `/api` is appended, matching the transport used after sign-in.
+
+### Changed
+- **BREAKING: one realtime relay instead of two.** The `/notifications/stream`
+  SSE proxy and the `/notifications/socket` WebSocket relay are removed; the
+  user's whole event stream — messages and opportunity frames alike — arrives
+  over `/conversations/stream` and `/conversations/socket`, following the API's
+  merge of the two upstream streams. Desktop OS notifications listen on that one
+  socket and suppress own sends only for messages. The `/notifications/snapshot`
+  proxy is removed with the upstream endpoint, so OS alerts are realtime-only;
+  the 60-second timer now only refreshes the signed-in identity that own-send
+  suppression needs. Requires an API at 0.113.0 or newer.
+- **BREAKING: the plugin authenticates with `INDEX_SESSION_TOKEN`, not
+  `INDEX_API_KEY`.** Browser login now redeems the device code returned by
+  `/cli-auth` for this device's own session and persists that, sending it as
+  `Authorization: Bearer`. Sign-out revokes the session server-side instead of
+  only clearing the local file, so it takes effect immediately. An
+  `INDEX_API_KEY` left by an older install is removed on the next login or
+  sign-out; re-run **log in with browser**.
+- **BREAKING: `INDEX_API_KEY` is your account key, not an agent-bound token.**
+  Browser login persists exactly what `/cli-auth` mints and stops there: the
+  CLI→agent promotion (`dashboard/agent_bootstrap.py`) is deleted, so login no
+  longer registers a "Hermes" agent, mints a per-agent token or revokes the key
+  it just stored. `GET /auth/login/status` drops `negotiatorReady`.
+  `index_agent_me` returns the agent you selected as your negotiator in the web
+  app; select one there, or it answers with a 404. Requires an API at 0.110.0 or
+  newer.
+- **BREAKING: sign-out is local.** `POST /auth/logout` clears `INDEX_API_KEY`
+  from the Hermes env file and the process, and no longer calls
+  `/auth/keys/revoke-self`, which the API deleted. The key stays live until it
+  is removed in Index web settings.
+- Network picture upload forwards to `POST /storage/network-images`, following
+  the Index API's rename of that route from `/storage/index-images`. Requires an
+  API at 0.107.0 or newer.
+
+### Removed
+- **The `hasMasterKey` network field.** The dashboard no longer forwards it and
+  the network detail always shows visibility and the invitation link, matching
+  the web app now that master-key signup is gone.
+
+### Removed
+- **The forwarders for deleted Index tools:** `confirm_opportunity_delivery`,
+  the four premise tools, and `read_activity_summary`. `research_profile` is
+  unchanged.
+- **The `index-orchestrator` skill**, plus the `pre_llm_call` hint hook and
+  `/index` command that existed only to load it.
+
+### Removed
+- **The negotiator mode and its tools.** `INDEX_PLUGIN_MODE`, `_mode.py`, the
+  `index-negotiator` skill, `index_respond_negotiation`, and the forwarded
+  `list_negotiations` / `get_negotiation` / `respond_to_negotiation` MCP
+  wrappers are gone: Index no longer exposes a negotiation turn surface. The
+  dashboard is always mounted and its `/mode` endpoint is removed.
+
+### Removed
+- Delete `tests/`. No source or tool-contract change.
+
+### Breaking
+- **`index_respond_negotiation` submits the MCP authored-turn contract.** It
+  now requires `negotiationId` plus exactly one continuing verb
+  (`outreach`/`counter`/`question`) or authored pause
+  (`needs_principal`/`ready_for_verdict`) and forwards it to MCP
+  `respond_to_negotiation`. The retired no-argument refusal and the earlier
+  `{ agentId, action }` vocabulary are removed. Terminal `accept`, `decline`,
+  and `withdraw` are not accepted; recommend an exit with
+  `ready_for_verdict` + `recommendation: reject`.
+
+## [0.25.0] - 2026-08-23
+
+### Breaking
+- **Negotiation-graph rewrite (protocol #1494).** `index_pickup_negotiation`
+  and `index_consult_owner` are removed outright — a negotiation is never
+  claimed into a distinct state any more (it just stays `working` until it
+  pauses or resolves), so there is nothing left to poll for or consult
+  about. `index_respond_negotiation` is the only negotiation tool left; its
+  shape changes to `{ agentId, negotiationId, action }` — no `roleAlignment`.
+  `action` is a new closed six-value vocabulary (`outreach`, `counter`,
+  `question`, `ask_principal`, `recommend_pending`, `recommend_reject`)
+  replacing the old `accept`/`decline`/`request_time`/`continue` set; there
+  is no accept, decline, or withdraw any more — a negotiator that wants out
+  submits `recommend_reject` and lets the owner's own agent act on it.
+- The conversation-SSE wake listener no longer polls a pickup heartbeat on
+  keepalive or piggybacks a tick off the desktop inbox list — there is no
+  server-side "poll for anything pending" endpoint left. It only starts a
+  Hermes turn for a negotiation id it actually observes on an SSE message
+  event; there is no periodic catch-up behind it any more (a known,
+  accepted gap — see `negotiation_wake.py`'s docstring).
+- **Known gap, not fixable from this package alone:** the negotiation
+  `/respond` route still requires a server-issued run-bound capability
+  header for the dedicated Hermes credential audience, and pickup was the
+  only thing that ever issued one. `index_respond_negotiation` calls will
+  be rejected with 401 end to end until services/api adds a replacement
+  issuance path.
+
+## [0.24.0] - 2026-08-17
+### Added
+- Pending pickup injects one Hermes chat turn so the model can reply with `index_respond_to_negotiation` and a real shared message. Empty pickup stays a seat heartbeat. Gateway injection needs `plugins.entries.index-network.allow_gateway_injection`.
+
+### Changed
+- Browser login treats the `/cli-auth` CLI key as bootstrap only: after the handshake the plugin reuses or registers the Hermes agent, mints an agent-bound token into `INDEX_API_KEY`, and revokes the CLI key. Login still succeeds if minting fails so Discover can keep the owner key.
+
+## [0.23.0] - 2026-08-14
+### Added
+- Conversation SSE wake for ordinary agent keys: `negotiation_wake` listens to `GET /conversations/stream`, stamps negotiation pickup on keepalive (~15s) and non-own negotiation messages, and runs one conservative consult/respond pass when a turn is pending. Desktop reuses the existing 15s inbox poll tick (no second scheduler).
+
+## [0.22.1] - 2026-08-13
+### Changed
+- Rename the Hermes sidebar entry from Index to Discover.
+
+## [0.22.0] - 2026-08-13
+### Added
+- Restore the browser login gate in the dashboard: **log in with browser** runs the same web `/cli-auth` v2 loopback handshake as the Index CLI and Mac app, persists the minted key to the Hermes env file (`INDEX_API_KEY`/`INDEX_API_KEY_ID`), and takes effect in-process without a restart. Sign out best-effort revokes the key via `/auth/cli-credential/revoke` and clears it. `INDEX_API_KEY` remains a manual override.
+
+## [0.21.0] - 2026-08-13
+### Removed
+- **Breaking:** the signed Index Connector transport, PKCE loopback authorization, dedicated `idxh_` Keychain credential, plaintext-scrub migration, and recovery-only disconnect machinery are all removed. Connector-based installs stop authenticating and must reconfigure.
+
+### Changed
+- The plugin authenticates with a single `INDEX_API_KEY` environment variable (an ordinary agent API key created in Index web settings). `INDEX_API_URL`/`INDEX_MCP_URL` remain optional endpoint overrides. The dashboard login screen now explains the API-key setup instead of opening a browser flow.
+
+## [0.20.0] - 2026-08-12
+### Added
+- Secure standalone macOS connection (0.20.0): production Hermes uses the signed Index Connector, canonical PKCE loopback approval, a dedicated Keychain-only `idxh_` identity, and fixed production endpoints rather than persisted plugin credentials. Full mode receives the exact six canonical actions while negotiator mode remains the four-handler, server-fenced execution surface.
+- Connector status, bounded upload/SSE forwarding, seven-day expiry warning, forced secure relogin migration, recovery-only disconnect, and owner pause/revoke/reconnect controls. The Index macOS app is optional.
+
+### Security
+- Production connector trust verifies fixed paths, ownership/modes, CMS release metadata, code-signing identity, hash, protocol, and build environment; source-only development transport is double-gated and excluded from packages. Credentials expire at 30 days with no refresh; uncertain revocation retains only nonsecret recovery evidence.
+
+## [0.19.0] - 2026-08-07
+
+### Added
+- Add the Personal Agent Hermes negotiation runtime. Index macOS can configure one local installation with the owned one-minute `Index Personal Agent Negotiator` schedule while the Personal Agent's stable identity, memory, policy, consultations, and history remain server-authoritative across Hermes execution and Index fallback; those private stores are not copied into Hermes.
+- Add `index_consult_owner` for server-authorized, privacy-minimal owner consultation. A scheduled pass may make at most one consultation or response and receives only server-provided structural facts, closed directives, and message-free speaker/action history—never raw owner context or memory, private consultation prose, evaluator/actor prose, or shared-message prose.
+- Add strict `INDEX_PLUGIN_MODE=negotiator`. Restricted mode registers only identity, negotiation pickup, response, consultation, and the generated negotiator skill; broad MCP wrappers, hooks, commands, the orchestrator skill, and dashboard routes/components remain disabled.
+
+### Security
+- Restrict the owned cron job at execution time to the exact `index-network` toolset and `index-network:index-negotiator` skill; shell, browser, HTTP, MCP, core, other-plugin, and global tools are unavailable even if untrusted pickup prose requests them.
+- Replace free-form owner consultation prose with the server's closed four-value `{reason}` contract.
+- Treat every pickup prose field as untrusted, keep owner-private context and credentials out of outward messages, and fail closed for every unknown non-empty plugin mode. Index validates the exact selected agent credential and all submitted actions; a stale or stopped Hermes heartbeat is covered by bounded Index fallback.

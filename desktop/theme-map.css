@@ -1,0 +1,357 @@
+/* Desktop host adapter: map the web-dashboard theme variables the shared
+   stylesheet consumes onto the desktop app's --ui-* theme variables, so the
+   page follows every desktop theme. The shared stylesheet's own hex fallbacks
+   still apply if a variable is missing. */
+.index-network-desktop-page {
+  --color-background: var(--ui-bg-editor);
+  --background-base: var(--ui-bg-editor);
+  --color-card: var(--ui-bg-elevated);
+  --color-card-foreground: var(--ui-text-primary);
+  /* The host's text tokens are its ink at 94/74/54% alpha. Full-strength
+     foreground is the ink itself, so a message reads as solid as the page it
+     sits on instead of washed into it. */
+  --color-foreground: var(--ui-base, var(--ui-text-primary));
+  --color-muted-foreground: var(--ui-text-tertiary);
+  --color-border: var(--ui-stroke-secondary);
+  --color-primary: var(--ui-accent);
+  --color-destructive: var(--ui-red);
+  --color-success: var(--ui-green);
+  --midground: var(--ui-text-secondary);
+  --midground-base: var(--ui-bg-tertiary);
+  --radius: 6px;
+  --index-radius: 2px;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+/* The pitch art's 1.25x scale bleeds over the card border — clip it. */
+.index-network-desktop-page .index-dashboard__pitch {
+  overflow: hidden;
+}
+
+/* Getting started fills the desktop page (Mac profileConfirmedAt parity). */
+.index-network-desktop-page .index-dashboard__getting-started {
+  min-height: calc(100% - 1rem);
+  padding: 1.5rem 1.25rem 2rem;
+  box-sizing: border-box;
+}
+
+.index-network-desktop-page .index-dashboard__profile-panel--getting-started {
+  width: 100%;
+  max-width: 42rem;
+}
+
+.index-network-desktop-page .index-dashboard__setting-up {
+  min-height: calc(100% - 1rem);
+}
+
+/* Browser sign-in gate fills the desktop page; button matches Getting started. */
+.index-network-desktop-page:has(.index-dashboard__login) {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.index-network-desktop-page:has(.index-dashboard__login) .index-dashboard,
+.index-network-desktop-page .index-dashboard__login {
+  flex: 1;
+  min-height: 0;
+}
+
+.index-network-desktop-page .index-dashboard__login-btn.idx-btn {
+  padding: 0.75rem 1.45rem;
+  font-size: 0.95rem;
+  min-height: 2.75rem;
+}
+
+/* Getting started actions: Mac-ink black, intentionally larger. */
+.index-network-desktop-page .index-dashboard__getting-started-btn.idx-btn {
+  padding: 0.75rem 1.45rem;
+  font-size: 0.95rem;
+  min-height: 2.75rem;
+}
+
+.index-network-desktop-page .index-dashboard__getting-started-btn.idx-btn--solid {
+  color: #fff;
+  border-color: #000;
+  background: #000;
+}
+
+.index-network-desktop-page .index-dashboard__getting-started-btn.idx-btn--outlined {
+  border-color: #000;
+  color: #000;
+  background: transparent;
+}
+
+/* The animated assets need no desktop-specific override: the shared
+   stylesheet now carries a light and a dark treatment, keyed off the
+   `data-scheme` the dashboard resolves from this app's theme (it stamps
+   data-hermes-mode / .dark / color-scheme on <html>). */
+
+/* The desktop host has no Badge component (head.js provides components: {}),
+   so BadgeText renders a bare <span> — recreate the web dashboard's badge
+   pill here. React forwards the unknown `tone` prop as a DOM attribute,
+   which lets tones (success/warning/destructive) be styled from CSS. */
+.index-network-desktop-page .index-dashboard__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--color-border, #d4d4d8);
+  /* Square, like the rows and buttons around it. */
+  border-radius: var(--index-radius, 2px);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--color-muted-foreground, #6b7280);
+  background: transparent;
+}
+
+/* Pending-count badges (the number on each intent row) read in the accent
+   color so they stand out from plain outline tags. */
+.index-network-desktop-page .index-dashboard__intent-counts .index-dashboard__badge {
+  color: var(--color-primary, #4fd1c5);
+  border-color: color-mix(in srgb, var(--color-primary, #4fd1c5) 45%, transparent);
+  background: color-mix(in srgb, var(--color-primary, #4fd1c5) 12%, transparent);
+}
+
+.index-network-desktop-page .index-dashboard__intent-list {
+  gap: 0.75rem;
+}
+
+/* Borderless: content sits flush with the panel heading, while the negative
+   margin lets the hover/selected fill bleed past it. */
+.index-network-desktop-page .index-dashboard__intent-row {
+  border-color: transparent;
+  padding: 0.625rem 0.5rem;
+  margin: 0 -0.5rem;
+  width: calc(100% + 1rem);
+}
+
+.index-network-desktop-page .index-dashboard__intent-row:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--midground, #ffe6cb) 8%, var(--background-base, #041c1c));
+}
+
+.index-network-desktop-page .index-dashboard__badge[tone="success"] {
+  color: var(--color-success, #16a34a);
+  border-color: color-mix(in srgb, var(--color-success, #16a34a) 45%, transparent);
+  background: color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent);
+}
+
+.index-network-desktop-page .index-dashboard__badge[tone="warning"] {
+  color: var(--ui-yellow, #d97706);
+  border-color: color-mix(in srgb, var(--ui-yellow, #d97706) 45%, transparent);
+  background: color-mix(in srgb, var(--ui-yellow, #d97706) 12%, transparent);
+}
+
+.index-network-desktop-page .index-dashboard__badge[tone="destructive"] {
+  color: var(--color-destructive, #ef4444);
+  border-color: color-mix(in srgb, var(--color-destructive, #ef4444) 45%, transparent);
+  background: color-mix(in srgb, var(--color-destructive, #ef4444) 12%, transparent);
+}
+
+.index-network-desktop-page .index-dashboard__badge[tone="secondary"] {
+  background: var(--midground-base, rgba(127, 127, 127, 0.15));
+  border-color: transparent;
+  color: var(--color-foreground, inherit);
+}
+
+/* SDK Button adapter (see DesktopButton in head.js): Mac-ink black buttons,
+   kept a step larger than the web dashboard. */
+.index-network-desktop-page .idx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1.15rem;
+  min-height: 2.35rem;
+  border: 1px solid #000;
+  border-radius: var(--index-radius, 2px);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: #000;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.index-network-desktop-page .idx-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.index-network-desktop-page .idx-btn--solid {
+  color: #fff;
+  border-color: #000;
+  background: #000;
+}
+
+.index-network-desktop-page .idx-btn--solid:hover:not(:disabled) {
+  background: #222;
+  border-color: #000;
+  color: #fff;
+}
+
+.index-network-desktop-page .idx-btn--outlined {
+  color: #000;
+  border-color: #000;
+  background: transparent;
+}
+
+.index-network-desktop-page .idx-btn--outlined:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000;
+}
+
+.index-network-desktop-page .idx-btn--ghost {
+  border-color: transparent;
+  color: #000;
+}
+
+.index-network-desktop-page .idx-btn--ghost:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000;
+}
+
+.index-network-desktop-page .idx-btn--icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0;
+}
+
+.index-network-desktop-page .idx-btn--destructive {
+  color: #fff;
+  border-color: #000;
+  background: #000;
+}
+
+/* Head action (Networks "Create"): the same square mono button as the Join
+   actions on the rows below, one step down, so it sits quieter than the list
+   it introduces. */
+.index-network-desktop-page .index-dashboard__net-create-btn.idx-btn {
+  min-height: 1.75rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.index-network-desktop-page .index-dashboard__new-signal-btn.idx-btn {
+  color: #fff;
+  border-color: var(--color-success, #3d9a5b);
+  background: var(--color-success, #3d9a5b);
+}
+
+.index-network-desktop-page .index-dashboard__new-signal-btn.idx-btn:hover:not(:disabled) {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--color-success, #3d9a5b) 85%, #000);
+  background: color-mix(in srgb, var(--color-success, #3d9a5b) 85%, #000);
+}
+
+/* The desktop app keeps the header pause/archive pill a step larger than the
+   web dashboard's base sizing. */
+.index-network-desktop-page .index-dashboard__action-seg {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.78rem;
+}
+
+.index-network-desktop-page .index-dashboard__action-seg svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* Gadget-style actions on opportunity cards: square mono buttons in ink color
+   (Mac-app flavored), primary inverted to an ink fill. */
+/* The compact buttons need less room: the action column is as wide as
+   accept + pass as equal halves, the widest thing in it. */
+.index-network-desktop-page .index-dashboard .index-dashboard__opp-btns,
+.index-network-desktop-page .index-dashboard .index-dashboard__opp-negotiating {
+  width: 8.5rem;
+}
+
+.index-network-desktop-page .index-dashboard__opp-btns .idx-btn,
+.index-network-desktop-page .index-dashboard__opp-negotiating {
+  border-radius: var(--index-radius, 2px);
+  border: 1px solid var(--ui-text-primary, #000);
+  background: transparent;
+  color: var(--ui-text-primary, #000);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.5rem;
+}
+
+.index-network-desktop-page .index-dashboard__opp-btns .idx-btn--solid {
+  background: var(--ui-text-primary, #000);
+  color: var(--ui-bg-editor, #fff);
+}
+
+.index-network-desktop-page .index-dashboard__opp-btns .idx-btn:hover:not(:disabled),
+.index-network-desktop-page .index-dashboard__opp-negotiating:hover {
+  background: var(--ui-bg-tertiary, rgba(127, 127, 127, 0.12));
+}
+
+.index-network-desktop-page .index-dashboard__opp-btns .idx-btn--solid:hover:not(:disabled) {
+  background: var(--ui-text-secondary, #333);
+}
+
+/* Signal chat fills the pane so the composer sits on the bottom. The shared
+   sheet caps the transcript at 18rem for a scrolling web page. */
+.index-network-desktop-page:has(.index-dashboard__detail) {
+  overflow: hidden;
+  padding-bottom: 1rem;
+}
+
+.index-network-desktop-page:has(.index-dashboard__detail) .index-dashboard,
+.index-network-desktop-page .index-dashboard__body,
+.index-network-desktop-page .index-dashboard__detail {
+  flex: 1;
+  min-height: 0;
+}
+
+.index-network-desktop-page .index-dashboard__detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.index-network-desktop-page .index-dashboard__detail-cols,
+.index-network-desktop-page .index-dashboard__detail .index-dashboard__card {
+  min-height: 0;
+  height: 100%;
+}
+
+.index-network-desktop-page .index-dashboard__detail .index-dashboard__card {
+  display: flex;
+  flex-direction: column;
+}
+
+.index-network-desktop-page .index-dashboard__detail .index-dashboard__card-content,
+.index-network-desktop-page .index-dashboard__agent-chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.index-network-desktop-page .index-dashboard__agent-thread {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.index-network-desktop-page .index-dashboard__detail .index-dashboard__opps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+}
